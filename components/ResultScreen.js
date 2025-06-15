@@ -15,18 +15,30 @@ export default function ResultScreen({ route }) {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 24,
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f8fafc',
   },
   title: {
     fontWeight: 'bold',
-    fontSize: 20,
-    marginBottom: 20,
+    fontSize: 24,
+    marginBottom: 18,
+    color: '#388e3c',
+    letterSpacing: 0.5,
   },
   result: {
-    fontSize: 16,
-    marginBottom: 30,
+    fontSize: 17,
+    marginBottom: 32,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 12,
+    padding: 18,
+    color: '#222',
+    width: '100%',
+    shadowColor: '#388e3c',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
   },
 });

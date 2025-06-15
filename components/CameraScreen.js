@@ -1,102 +1,117 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { Camera } from 'expo-camera';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { useRef, useState } from 'react';
+import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function CameraScreen({ navigation }) {
-  const [hasPermission, setHasPermission] = useState(null);
-  const [photoUri, setPhotoUri] = useState(null);
-  const [type, setType] = useState(Camera.Constants.Type.back);
+  const [facing, setFacing] = useState('back');
+  const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
+  const [isTakingPhoto, setIsTakingPhoto] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
+  if (!permission) {
+    // Camera permissions are still loading.
+    return <View />;
+  }
+
+  if (!permission.granted) {
+    // Camera permissions are not granted yet.
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Button onPress={requestPermission} title="grant permission" />
+      </View>
+    );
+  }
+
+  function toggleCameraFacing() {
+    setFacing(current => (current === 'back' ? 'front' : 'back'));
+  }
 
   async function takePicture() {
-    if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync();
-      setPhotoUri(photo.uri);
-      navigation.navigate('SymptomInput', { image: photo.uri });
+    if (cameraRef.current && !isTakingPhoto) {
+      setIsTakingPhoto(true);
+      try {
+        const photo = await cameraRef.current.takePictureAsync();
+        // Send the photo.uri to the AI (navigate or call a function)
+        navigation.navigate('SymptomInput', { image: photo.uri });
+      } catch (e) {
+        alert('Failed to take picture: ' + e.message);
+      } finally {
+        setIsTakingPhoto(false);
+      }
     }
-  }
-
-  if (hasPermission === null) {
-    return <View style={styles.container}><Text>Requesting camera permission...</Text></View>;
-  }
-  if (hasPermission === false) {
-    return <View style={styles.container}><Text>No access to camera. Please enable camera permissions.</Text></View>;
   }
 
   return (
     <View style={styles.container}>
-      {!photoUri ? (
-        <>
-          <Camera 
-            style={styles.camera} 
-            ref={cameraRef} 
-            type={type}
-          />
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={styles.button} 
-              onPress={() => setType(
-                type === Camera.Constants.Type.back
-                  ? Camera.Constants.Type.front
-                  : Camera.Constants.Type.back
-              )}
-            >
-              <Text style={styles.buttonText}>Flip Camera</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={takePicture}>
-              <Text style={styles.buttonText}>Take Photo</Text>
-            </TouchableOpacity>
-          </View>
-        </>
-      ) : (
-        <>
-          <Image source={{ uri: photoUri }} style={styles.preview} />
-          <TouchableOpacity style={styles.button} onPress={() => setPhotoUri(null)}>
-            <Text style={styles.buttonText}>Retake</Text>
+      <CameraView
+        style={styles.camera}
+        facing={facing}
+        ref={cameraRef}
+        photo
+      >
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+            <Text style={styles.text}>Flip Camera</Text>
           </TouchableOpacity>
-        </>
-      )}
+          <TouchableOpacity style={[styles.button, { marginLeft: 20 }]} onPress={takePicture} disabled={isTakingPhoto}>
+            <Text style={styles.text}>{isTakingPhoto ? 'Taking...' : 'Take Photo'}</Text>
+          </TouchableOpacity>
+        </View>
+      </CameraView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    backgroundColor: '#000' 
+  container: {
+    flex: 1,
+    backgroundColor: '#10141A',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  camera: { 
-    width: '100%', 
-    height: '70%' 
+  camera: {
+    flex: 1,
+    width: '100%',
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   buttonContainer: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    paddingHorizontal: 20,
-    marginTop: 20
+    justifyContent: 'center',
+    gap: 20,
   },
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    backgroundColor: '#1e90ff',
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 36,
+    backgroundColor: 'rgba(30, 144, 255, 0.7)',
+    borderRadius: 30,
+    marginHorizontal: 10,
+    shadowColor: '#1e90ff',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    backdropFilter: 'blur(10px)', // for web, ignored on native
   },
-  buttonText: { 
-    color: '#fff', 
-    fontSize: 18 
+  text: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    letterSpacing: 1,
   },
-  preview: { 
-    width: '100%', 
-    height: '70%' 
+  message: {
+    color: '#fff',
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+    backgroundColor: 'rgba(30,144,255,0.2)',
+    padding: 16,
+    borderRadius: 12,
   },
 });

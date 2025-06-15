@@ -5,32 +5,32 @@ const OPENAI_API_KEY = 'xxxx';
 
 const whisperService = {
   transcribeAudio: async (fileUri) => {
-    const fileInfo = await FileSystem.getInfoAsync(fileUri);
-    const fileBase64 = await FileSystem.readAsStringAsync(fileUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    try {
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      const formData = new FormData();
+      formData.append('file', {
+        uri: fileUri,
+        name: 'audio.m4a',
+        type: 'audio/m4a',
+      });
+      formData.append('model', 'whisper-1');
+      formData.append('response_format', 'text');
 
-    const formData = new FormData();
-    formData.append('file', {
-      uri: fileUri,
-      name: 'audio.m4a',
-      type: 'audio/m4a',
-    });
-    formData.append('model', 'whisper-1');
-    formData.append('response_format', 'text');
-
-    const response = await axios.post(
-      'https://api.openai.com/v1/audio/transcriptions',
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-
-    return response.data.text;
+      const response = await axios.post(
+        'https://api.openai.com/v1/audio/transcriptions',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data.text;
+    } catch (error) {
+      console.error('OpenAI Whisper API error:', error.response ? error.response.data : error.message);
+      throw error;
+    }
   },
 };
 
