@@ -2,28 +2,34 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text, ActivityIndicator, ScrollView, StyleSheet } from 'react-native';
 import gptService from '../services/gptService';
 import visionService from '../services/visionService';
+import generateImages from '../services/imageService';
+
 
 export default function SymptomInput({ route, navigation }) {
-  const { image } = route.params;
+  const image = route?.params?.image ?? null;
+  const { name = '', birthday = '' } = route.params ?? {};
   const [symptoms, setSymptoms] = useState('');
   const [loading, setLoading] = useState(false);
   const [visionLabels, setVisionLabels] = useState('');
 
-  const analyze = async () => {
+const analyze = async () => {
     setLoading(true);
 
     try {
-      const visionResult = await visionService.analyzeImage(image);
-      setVisionLabels(visionResult);
+      let visionResult = '';
+      if (image) {
+        visionResult = await visionService.analyzeImage(image);
+        setVisionLabels(visionResult);
+      }
 
-      const result = await gptService.analyzeCase(symptoms, visionResult);
-      navigation.navigate('Result', { result });
-
+      const result = await gptService.analyzeCase(symptoms, visionResult ?? ' ');
+      // Generate images based on GPT result (simplest way: we use symptoms as prompt)
+      const images = await generateImages(symptoms);
+      navigation.navigate('Result', { result, images , name , birthday});
     } catch (error) {
       console.error('Error during analysis:', error);
       alert("An error occurred during analysis.");
     }
-
     setLoading(false);
   };
 
@@ -40,10 +46,14 @@ export default function SymptomInput({ route, navigation }) {
       />
 
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <Button title="Analyze" onPress={analyze} />
-      )}
+  <View style={styles.loadingBox}>
+    <ActivityIndicator size="large" color="#1976d2" />
+    <Text style={styles.loadingText}>Analyzing your data...</Text>
+  </View>
+) : (
+  <Button title="Analyze" onPress={analyze} />
+)}
+
 
       {visionLabels ? (
         <View style={styles.visionBox}>
@@ -62,6 +72,7 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     justifyContent: 'flex-start',
+    paddingTop: 80, // add some top padding
   },
   title: {
     fontWeight: 'bold',
@@ -101,4 +112,15 @@ const styles = StyleSheet.create({
     color: '#1976d2',
     marginBottom: 4,
   },
+  loadingBox: {
+  marginTop: 20,
+  alignItems: 'center',
+},
+loadingText: {
+  marginTop: 10,
+  fontSize: 16,
+  color: '#1976d2',
+  fontWeight: '500',
+},
+
 });

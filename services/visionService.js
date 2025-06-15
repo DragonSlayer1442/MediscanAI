@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
 
-const GOOGLE_VISION_API_KEY = 'xxxxxx';
+const GOOGLE_VISION_API_KEY = 'xxxx';
 
 const visionService = {
   analyzeImage: async (uri) => {

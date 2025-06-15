@@ -2,10 +2,11 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useRef, useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function CameraScreen({ navigation }) {
+export default function CameraScreen({ navigation,route }) {
   const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
+  const { name, birthday } = route.params; 
   const [isTakingPhoto, setIsTakingPhoto] = useState(false);
 
   if (!permission) {
@@ -33,7 +34,7 @@ export default function CameraScreen({ navigation }) {
       try {
         const photo = await cameraRef.current.takePictureAsync();
         // Send the photo.uri to the AI (navigate or call a function)
-        navigation.navigate('SymptomInput', { image: photo.uri });
+        navigation.navigate('SymptomInput', { image: photo.uri , name , birthday });
       } catch (e) {
         alert('Failed to take picture: ' + e.message);
       } finally {
