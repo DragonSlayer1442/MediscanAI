@@ -1,22 +1,24 @@
-// import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
 const pdfService = {
   exportPDF: async (report) => {
-    // PDF export is disabled because react-native-html-to-pdf is not supported in Expo managed workflow.
-    // const htmlContent = `
-    //   <h1>Medical AI Report</h1>
-    //   <p>${report.replace(/\n/g, '<br/>')}</p>
-    // `;
+    try {
+      const htmlContent = `
+        <h1 style="color:#1976d2;">Medical AI Report</h1>
+        <p>${report.replace(/\n/g, '<br/>')}</p>
+      `;
 
-    // const file = await RNHTMLtoPDF.convert({
-    //   html: htmlContent,
-    //   fileName: 'MediScan_Report',
-    //   base64: false,
-    // });
+      const { uri } = await Print.printToFileAsync({
+        html: htmlContent,
+        base64: false,
+      });
 
-    // await Sharing.shareAsync(file.filePath);
-    alert('PDF export is not available in this build.');
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      console.error('PDF Export error:', error);
+      alert('Failed to export PDF: ' + error.message);
+    }
   }
 };
 

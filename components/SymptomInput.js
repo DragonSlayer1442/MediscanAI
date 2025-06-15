@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text, ActivityIndicator, ScrollView, StyleSheet } from 'react-native';
 import gptService from '../services/gptService';
 import visionService from '../services/visionService';
-import VoiceRecorder from './VoiceRecorder';
 
 export default function SymptomInput({ route, navigation }) {
   const { image } = route.params;
@@ -14,14 +13,10 @@ export default function SymptomInput({ route, navigation }) {
     setLoading(true);
 
     try {
-      // First analyze image using Vision API
       const visionResult = await visionService.analyzeImage(image);
       setVisionLabels(visionResult);
 
-      // Then combine vision result and symptoms with GPT
       const result = await gptService.analyzeCase(symptoms, visionResult);
-
-      // Navigate to result screen
       navigation.navigate('Result', { result });
 
     } catch (error) {
@@ -30,10 +25,6 @@ export default function SymptomInput({ route, navigation }) {
     }
 
     setLoading(false);
-  };
-
-  const handleVoiceInput = (transcription) => {
-    setSymptoms(prev => prev + ' ' + transcription);
   };
 
   return (
@@ -47,8 +38,6 @@ export default function SymptomInput({ route, navigation }) {
         onChangeText={setSymptoms}
         value={symptoms}
       />
-
-      <VoiceRecorder onTranscription={handleVoiceInput} />
 
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />

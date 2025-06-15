@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const OPENAI_API_KEY = 'xxxx';
+const OPENAI_API_KEY = 'xxxxx';
 
 const gptService = {
   analyzeCase: async (symptoms, visionResult) => {
